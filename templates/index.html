@@ -3,65 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrimOTP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>2FA Code Generator</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>2FA Code Generator</h1>
-        <input type="text" id="secretKey" placeholder="Enter your secret key" />
-        <button id="generateButton">Generate OTP</button>
-        <div id="otpDisplay" class="otp-display"></div>
-        <div id="timer" class="timer"></div>
-        <button id="copyButton" style="display: none;">Copy OTP</button>
+        <h1>GrimOTP - Use in Cadet Colleges lol</h1>
+        <p>2FA is a headache in cadet colleges so stack up your private keys somewhere online or in a pendrive and use GrimOTP to generate 2FA codes in seconds.</p>
+        <p>A product of the Grim Development - RFS</p>
+
+        <div>
+            <label for="secretKey">Enter Secret Key:</label>
+            <input type="text" id="secretKey" placeholder="Your Secret Key" required>
+            <button id="generateOTP">Generate OTP</button>
+        </div>
+        
+        <h2 id="otpDisplay"></h2>
+        <button id="copyOTP">Copy OTP</button>
+
         <div id="log" class="log"></div>
+        
+        <footer>
+            <p>Grim Development - 2024</p>
+        </footer>
     </div>
 
     <script>
-        let timerInterval;
+        // Function to generate a TOTP based on the provided secret key
+        function generateTOTP(secret) {
+            const epoch = Math.floor(Date.now() / 1000);
+            const time = Math.floor(epoch / 30); // TOTP is valid for 30 seconds
+            const key = base32ToByteArray(secret);
 
-        document.getElementById("generateButton").addEventListener("click", function () {
-            const secretKey = document.getElementById("secretKey").value.trim();
-            if (secretKey) {
-                fetch('/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `secret=${secretKey}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById("otpDisplay").innerText = `Your OTP: ${data.otp}`;
-                    document.getElementById("log").innerText = "2FA code generated.";
-                    startTimer(30); // Start a 30-second countdown
-                    document.getElementById("copyButton").style.display = "inline"; // Show copy button
-                });
-            } else {
-                document.getElementById("log").innerText = "Please enter a secret key.";
-            }
-        });
+            const hmac = new Uint8Array(32);
+            const hmacKey = CryptoJS.enc.Base64.parse(CryptoJS.enc.Hex.stringify(key));
+            const hmacValue = CryptoJS.HmacSHA1(hmacKey, CryptoJS.enc.Latin1.parse(time.toString()));
 
-        function startTimer(duration) {
-            let timer = duration;
-            document.getElementById("timer").innerText = `Time left: ${timer} seconds`;
-            clearInterval(timerInterval); // Clear any existing interval
-            timerInterval = setInterval(() => {
-                timer--;
-                document.getElementById("timer").innerText = `Time left: ${timer} seconds`;
-                if (timer <= 0) {
-                    clearInterval(timerInterval);
-                    document.getElementById("log").innerText = "OTP expired. Please generate a new one.";
-                    document.getElementById("copyButton").style.display = "none"; // Hide copy button
-                }
-            }, 1000);
+            const offset = hmacValue[hmacValue.length - 1] & 0xf;
+            const otp = ((hmacValue[offset] & 0x7f) << 24) |
+                        ((hmacValue[offset + 1] & 0xff) << 16) |
+                        ((hmacValue[offset + 2] & 0xff) << 8) |
+                        (hmacValue[offset + 3] & 0xff);
+
+            return otp % 1000000; // Return a 6-digit OTP
         }
 
-        document.getElementById("copyButton").addEventListener("click", function () {
+        // Convert Base32 secret to byte array
+        function base32ToByteArray(base32) {
+            const base32Map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            const padding = (base32.match(/=/g) || []).length;
+
+            let byteArray = [];
+            let buffer = 0;
+            let bitsLeft = 0;
+
+            for (let char of base32.replace(/=/g, '')) {
+                const value = base32Map.indexOf(char);
+                buffer = (buffer << 5) | value;
+                bitsLeft += 5;
+
+                if (bitsLeft >= 8) {
+                    byteArray.push((buffer >> (bitsLeft - 8)) & 0xff);
+                    bitsLeft -= 8;
+                }
+            }
+
+            return byteArray;
+        }
+
+        document.getElementById("generateOTP").addEventListener("click", function () {
+            const secretKey = document.getElementById("secretKey").value.trim();
+
+            if (!secretKey) {
+                document.getElementById("log").innerText = "Warning: Please enter a secret key.";
+                return;
+            }
+
+            const generatedOTP = generateTOTP(secretKey);
+
+            document.getElementById("otpDisplay").innerText = `Your OTP: ${generatedOTP}`;
+            document.getElementById("log").innerText = "2FA code generated.";
+        });
+
+        document.getElementById("copyOTP").addEventListener("click", function () {
             const otpText = document.getElementById("otpDisplay").innerText;
-            const otp = otpText.split(": ")[1]; // Extract OTP
-            if (otp) {
-                navigator.clipboard.writeText(otp).then(() => {
+
+            if (otpText) {
+                navigator.clipboard.writeText(otpText).then(() => {
                     document.getElementById("log").innerText = "OTP copied to clipboard!";
                 }).catch(err => {
                     document.getElementById("log").innerText = "Failed to copy OTP.";
