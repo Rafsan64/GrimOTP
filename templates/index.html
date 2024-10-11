@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>2FA Code Generator</title>
+</head>
+<body>
+    <div class="container">
+        <h1>2FA Code Generator</h1>
+        <input type="text" id="secretKey" placeholder="Enter your secret key" />
+        <button id="generateButton">Generate OTP</button>
+        <div id="otpDisplay" class="otp-display"></div>
+        <div id="timer" class="timer"></div>
+        <button id="copyButton" style="display: none;">Copy OTP</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let timerInterval;
+
+        document.getElementById("generateButton").addEventListener("click", function () {
+            const secretKey = document.getElementById("secretKey").value.trim();
+            if (secretKey) {
+                fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `secret=${secretKey}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("otpDisplay").innerText = `Your OTP: ${data.otp}`;
+                    document.getElementById("log").innerText = "2FA code generated.";
+                    startTimer(30); // Start a 30-second countdown
+                    document.getElementById("copyButton").style.display = "inline"; // Show copy button
+                });
+            } else {
+                document.getElementById("log").innerText = "Please enter a secret key.";
+            }
+        });
+
+        function startTimer(duration) {
+            let timer = duration;
+            document.getElementById("timer").innerText = `Time left: ${timer} seconds`;
+            clearInterval(timerInterval); // Clear any existing interval
+            timerInterval = setInterval(() => {
+                timer--;
+                document.getElementById("timer").innerText = `Time left: ${timer} seconds`;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById("log").innerText = "OTP expired. Please generate a new one.";
+                    document.getElementById("copyButton").style.display = "none"; // Hide copy button
+                }
+            }, 1000);
+        }
+
+        document.getElementById("copyButton").addEventListener("click", function () {
+            const otpText = document.getElementById("otpDisplay").innerText;
+            const otp = otpText.split(": ")[1]; // Extract OTP
+            if (otp) {
+                navigator.clipboard.writeText(otp).then(() => {
+                    document.getElementById("log").innerText = "OTP copied to clipboard!";
+                }).catch(err => {
+                    document.getElementById("log").innerText = "Failed to copy OTP.";
+                });
+            }
+        });
+    </script>
+</body>
+</html>
