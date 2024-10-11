@@ -1,58 +1,51 @@
 body {
-    background-color: #000; /* Black background */
-    color: #fff; /* White text */
+    background-color: #1e1e1e;
+    color: #ffffff;
     font-family: Arial, sans-serif;
-    text-align: center; /* Center the text */
-    margin: 0; /* Remove default margin */
-    padding: 20px; /* Add some padding */
+    text-align: center;
 }
 
-h1 {
-    color: #00ff00; /* Bright green for the main heading */
-    margin-bottom: 10px;
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
 }
 
-p {
-    color: #ccc; /* Light grey for the description */
-    margin: 10px 0; /* Add some margin between paragraphs */
-}
-
-#secretKey {
-    padding: 10px; /* Padding inside the input box */
-    border: 1px solid #ccc; /* Light grey border */
-    border-radius: 5px; /* Rounded corners */
-    width: 300px; /* Fixed width for input */
+input[type="text"] {
+    padding: 10px;
+    width: 70%;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
 button {
-    padding: 10px 20px; /* Padding for buttons */
-    background-color: #007bff; /* Blue background */
-    border: none; /* No border */
-    border-radius: 5px; /* Rounded corners */
-    color: white; /* White text */
-    cursor: pointer; /* Pointer cursor on hover */
-    margin: 10px; /* Margin around buttons */
-    transition: background-color 0.3s; /* Smooth transition */
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
 }
 
 button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+    background-color: #0056b3;
 }
 
-#otpDisplay {
-    font-size: 24px; /* Larger font for OTP display */
-    margin: 20px 0; /* Margin above and below */
-    color: #00ff00; /* Green for OTP display */
+.otp-display {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 5px;
 }
 
 .log {
-    margin-top: 20px; /* Margin above log */
-    color: #ffcc00; /* Yellow color for log messages */
-    font-weight: bold; /* Bold log messages */
+    margin-top: 10px;
+    color: green;
 }
 
-footer {
-    margin-top: 30px; /* Space above the footer */
-    color: #ccc; /* Light grey color for footer */
-    font-size: 14px; /* Smaller font size for footer */
+.timer {
+    margin: 15px 0;
+    font-weight: bold;
+    color: #ffcc00; /* Yellow color for visibility */
 }
